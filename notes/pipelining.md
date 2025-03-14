@@ -67,3 +67,4 @@ For image
 
 
 
+![pipeline](pipelining.assets/pipeline.png)
