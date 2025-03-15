@@ -39,9 +39,9 @@
 
 
 \author{
-Zhanhao Liu (zhanhaol@umich.edu), \\
+Zhanhao Liu (zhanhaol@umich.edu),
 Huanchen Jia (jhuanch@umich.edu),\\
-Qiulin Fan (rynnefan@umich.edu),\\
+Qiulin Fan (rynnefan@umich.edu),
 Lingyu Meng (jmly@umich.edu)\\
 }
 
@@ -51,10 +51,11 @@ Lingyu Meng (jmly@umich.edu)\\
 \maketitle
 
 \section{Abstract}
-Multimodal representation learning, mainly through frameworks like Contrastive Language–Image Pretraining (CLIP), has shown significant promise in bridging the gap between textual and visual data. CLIP-based models excel in tasks such as zero-shot classification, cross-modal retrieval, and transfer learning by learning joint embeddings of text and images. However, the performance of these models is heavily reliant on the quality, diversity, and scale of the training data. Current multimodal datasets often lack localized, fine-grained features and positional details in captions, which can hinder the generalization and robustness of CLIP-based systems. While much attention has been given to improving model architectures and training strategies, there is a critical need to explore data-centric methods—such as dataset curation, augmentation, debiasing, and sampling—to address these challenges. 
+Contrastive Language–Image Pretraining excels in multimodal learning, enabling zero-shot classification, cross-modal retrieval, and transfer learning. However, its reliance on global image-text alignment limits its ability to capture localized features, weakening performance in fine-grained visual tasks. To address this, DeClip introduces image-based hard negatives by modifying key image-caption pairs, enhancing model robustness and discrimination. This improves CLIP’s ability to distinguish fine-grained details, strengthening its effectiveness in contrastive learning and multimodal tasks.
 
 \section{Introduction}
-Recent studies show that CLIP, trained on full images, struggles to learn localized features—small but critical details—due to its reliance on global image-text alignment, limiting its effectiveness in fine-grained visual-text tasks such as detailed object classification and caption-based retrieval. While hard negative mining has proven beneficial in contrastive learning, most existing approaches emphasize textual modifications, neglecting image-based hard negatives, which are essential for refining CLIP’s ability to capture subtle visual differences. To address this, we propose DeClip, a data-centric approach that extracts key information from image-caption pairs, modifies corresponding image components, and generates hard negatives to improve model robustness and discrimination. In safety-critical domains like medical imaging and robotics, these localized details are crucial for accurate identification and precise action. Minute visual differences can determine healthy vs. diseased tissue, and missing them may lead to misdiagnoses. In robotics, particularly surgical applications, identifying exact boundaries or precise tool-tip positions is vital, as errors could have life-threatening consequences. Many downstream tasks also require an understanding of not just what an object is but where it is and how it is oriented, such as a robotic gripper pinpointing an item’s edges for a secure grasp. We propose that DeClip’s training methodology can enable models to learn localized features while effectively capturing positional and orientation cues, though rigorous testing is needed to validate and refine this capability.
+CLIP\cite{radford2021learningtransferablevisualmodels} (Radford et al., 2021), trained on full images, struggles to learn localized features due to its reliance on global image-text alignment, limiting its effectiveness in fine-grained visual-text tasks like object classification and caption-based retrieval. This limitation hinders its ability to capture subtle visual differences, which is especially problematic in safety-critical domains such as medical imaging and robotics, where precise distinctions—like identifying diseased tissue or ensuring accurate tool positioning—are crucial. Solving this problem would improve CLIP’s ability to learn localized visual details, enhancing its adaptability to tasks requiring fine-grained reasoning and ultimately making it more effective in real-world multimodal applications.
+    
 
 
 
@@ -63,41 +64,33 @@ Recent studies show that CLIP, trained on full images, struggles to learn locali
 
 
 \section{Proposed method}
-Prior research suggests that, for each pair of correct (image, caption) examples, if its caption is rewritten, e.g., by reordering and changing its constituents, it can be changed into a very similar but erroneous hard negative. Our idea has similarities and extensions. idea has both similarities and extensions: we hypothesize that for each pair of correct (image, caption) examples, if we remove a key component from the image and keep the rest, then the resulting image has a high degree of similarity to the original image, but does not fit the caption; and for the caption after removing the keyword, and the caption after removing the keyword, we can change the caption to a very similar but wrong hard negative. For the caption after removing the keywords, the new image is correctly matched with the original image.
+\subsection{Overall Approach}
+Prior research suggests that, for each pair of correct (image, caption) example, by rewriting the caption, e.g. reordering and changing its constituents, we can generate into a very hard negative. (Fan, Krishnan, et. al.\cite{fan2023improvingcliptraininglanguage}). Our idea has similarities and extensions. We propose another idea to mine hard negaives on the image side. For each true example in a subset of the dataset, we remove some key components from the image and keep the rest, leave the resulting image a high degree of similarity to the original image, but does not fit the caption, as a hard negative. We then dually remove the keywords on the caption, as a new positive example.
 
 For the new image after removing the keyword, we call it \textbf{dual image}; for the new caption after removing the keyword, we call it \textbf{dual text}. 
 
-To do this, we take a small hyperparameter $N$ (e.g., $N=3$), utilize the in-context learning capability of large language models, extract $N$ key components (if possible), and categorize them into different key components. If possible), and categorize them into a few pretrained classes. Immediately after that, we perform image segmentation using RCNN models (e.g., YOLO v8) to extract $N$ key components from the image, generate masks, and then use the image inpainting capability of the diffusion model to transform these key components into masks, which can be used for image segmentation in the image. In addition, we can rewrite the original caption by LLM to remove each keyword from the text, and get $N$ dual texts accordingly.
-
-\begin{figure}[H]
+\begin{figure}{H}
     \centering
     \includegraphics[width=1\textwidth]{midterm_report/assets/pipeline2.png}
     \caption{Overall approach}
 \end{figure}
+In concrete: 
+\begin{itemize}
+    \item We assign a small hyperparameter $N$ (e.g., $N=3$)
+    \item Utilize the in-context learning capability of large language models to extract $N$ key components (if possible), and categorize them into a few pretrained classes.
+    \item Perform image segmentation using Fast RCNN models (e.g., \texttt{YOLO v8}) to extract $N$ key components from the image, generate masks.
+    \item Use diffusion model to do image inpaining, generating $N$ new images by respectively removing the $N$ components on the original image.
+    \item Rewrite the original caption by LLM to remove each keyword from the text, and get $N$ dual texts accordingly.
+\end{itemize}
 
 
-
-
-
-The rationality of our idea can be based on the manifold hypothesis. 
-
-Our idea invokes the manifold hypothesis. 
-We aimed at improving CLIP's perception of the relationship between composition and text. 
-
-
-
-
-Prior research 
-We aimed at 
-Prior work has shown that the embedding manifold of CLIP is characterized as double-ellipsoids\cite{levi2024doubleellipsoidgeometryclip} (Levi, Gilboa, 2024), and we 
-
-For each sample image, we suppose that the 
-\begin{figure}{r}{\textwidth} % r: 图片在右侧
+\begin{figure}{H} % r: 图片在右侧
     \centering
     \includegraphics[width=0.7\textwidth]{midterm_report/assets/manifold.png}
     \caption{Embedding data manifold in Clip Space}
 \end{figure}
-Our idea invoke the manifold hypothesis. Prior work has shown that the embedding space of CLIP is characterized as double-ellipsoids\cite{levi2024doubleellipsoidgeometryclip} (Levi, Gilboa, 2024), and we 
+
+Our idea invokes the manifold hypothesis, aims at improving CLIP's composition-reasoning ability. Prior work has shown that the embedding manifold of CLIP is characterized as double-ellipsoids\cite{levi2024doubleellipsoidgeometryclip} (Levi, Gilboa, 2024), and we hypothesize: dual images with critical components removed characterize the local structure of the original image, as a valid interpolation; and the generation of dual texts can let the model learn the mapping between the sample image and the open neighborhood near the caption. We conjecture that our approach increases the combinatorial inference ability and robustness of the model on training with small datasets.
 
 
 
@@ -111,23 +104,26 @@ Our idea invoke the manifold hypothesis. Prior work has shown that the embedding
 
 
 
-
 \section{Related work}
 \subsection{Existing Methods:}
-CLIP (Contrastive Language-Image Pre-Training) is a multimodal representation learning model which leanrs to understand both text and image jointly by combining them in a shared embedding space. And its performance is shown recently that it could be enhanced by leverging the difficulty in training.\\
+ CLIP's performance is shown recently that it could be enhanced by leverging the difficulty in training.\\
 Currently the exisiting methods mostly improve in the following perspectives.\\
 \begin{itemize}
-    \item \textbf{Hard Negative Mining}: Hard negative examples are those that are semantically similar to the positive samples but belong to different classes, making it challenging for the model to distinguish between them. In contrastive learning, two primary strategies enhance model performance: generation-based methods and regularization-based methods. Generation-based methods, such as NegCLIP and SVLC, create hard negatives by altering positive samples to produce semantically similar yet incorrect pairs, challenging models to discern subtle differences. Regularization-based methods employ strategies like intra-modal contrastive loss and ranking cross-modal hard negatives to refine learning.
-    \item \textbf{Fine-Grained Cross-Modal Alignment Fine-Tuning}: Some previous works such as FILIP enhances multimodal alignment by matching local image patches with specific text tokens via a similarity matrix. Unlike CLIP’s global image-text matching, it computes token-level contrastive losses, forcing visual and textual tokens to mutually select their most relevant counterparts. The regional information and details could be better learned this way.
+    % \item \textbf{Hard Negative Mining}: Hard negative examples are those that are semantically similar to the positive samples but belong to different classes, making it challenging for the model to distinguish between them. In contrastive learning, two primary strategies enhance model performance: generation-based methods and regularization-based methods. Generation-based methods, such as NegCLIP and SVLC, create hard negatives by altering positive samples to produce semantically similar yet incorrect pairs, challenging models to discern subtle differences. Regularization-based methods employ strategies like intra-modal contrastive loss and ranking cross-modal hard negatives to refine learning.
+
+    \item \textbf{Hard Negative Mining}: Hard negatives closely resemble positive samples yet belong to different classes, making them difficult to distinguish. In contrastive learning, two main strategies address this: generation-based and regularization-based. Generation-based methods (e.g., NegCLIP\cite{yuksekgonul2023visionlanguagemodelsbehavelike} ((Yuksekgonul et al., 2022)) modify positive samples to create semantically similar but incorrect pairs, forcing models to learn subtle distinctions. Regularization-based methods use techniques like intra-modal contrastive loss and cross-modal ranking of hard negatives to refine learning.
+
+    
+    
+    \item \textbf{Fine-Grained Cross-Modal Alignment Fine-Tuning}: Some previous works such as FILIP\cite{yao2021filipfinegrainedinteractivelanguageimage}  enhances multimodal alignment by matching local image patches with specific text tokens via a similarity matrix. Unlike CLIP’s global image-text matching, it computes token-level contrastive losses, forcing visual and textual tokens to mutually select their most relevant counterparts. The regional information and details could be better learned this way.
     \item \textbf{Rewrite Empowered by Large Language Model}: LaCLIP generates diverse text rewrites for each image caption via LLMs while preserving semantic meaning, boosting the performances significantly on datsets such as  CC12M and LAION-400M . 
 \end{itemize}
 \subsection{Comparisons:}
 DeCLIP combines the idea of \textbf{Hard Negative Mining} and \textbf{Fine-Grained Cross-Modal Alignment Fine-Tuning} such that the model can deepen its understanding of the entire image by paying attention to the regional changes of the image. From the proposed method section, DeCLIP uses Large language model to capture keywords from the caption in the data set and replaces those keywords one at a time with pre-trained catogeries, forming our final traning set. It is different from \textbf{Hard Negative Mining} in applying the changes to \textbf{images} instead of \textbf{texts}, while it is improved based on \textbf{Fine-Grained Cross-Modal Alignment Fine-Tuning} by considering contexts of texts and layout of images
 \subsection{Core Model and Tool References:}
-Our framework integrates multiple state-of-the-art tools for multimodal tasks. The core part is CLIP itself combining text and image processing.
-For \textbf{text extractions}, we utilize the \texttt{spaCy} library with its small English language model (\texttt{en\_core\_web\_sm}), which takes out nouns effecitvely and merge compound noun if needed. 
-Mapping from extracted nouns to pre trained catogories is captured using the \texttt{word2vec-google-news-300} embeddings, a 300-dimensional model trained on 3 billion words from Google News. 
-For \textbf{images segmentation}, we deploy \texttt{yolov8n-seg.pt}, a lightweight variant of YOLOv8-seg pretrained on COCO, and optimize inference via ONNX export. Smoothing images is enhanced by integrating \texttt{CLIP} through the \texttt{runwayml/stable-diffusion-inpainting} pipeline, enabling robust image-text understanding in tasks like inpainting.
+Our framework integrates state-of-the-art multimodal tools. For text extraction, \texttt{spaCy} identifies and merges compound nouns. We then map these nouns to pre-trained categories via \texttt{word2vec-google-news-300} embeddings. For image segmentation, \texttt{yolov8n-seg.pt} (a lightweight YOLOv8 variant pretrained on COCO) is used.\\ Inpainting leverages \texttt{runwayml/stable-diffusion-inpainting} and \texttt{CLIP}, ensuring robust image–text understanding.
+
+
 
 
 
@@ -142,16 +138,13 @@ We have completed a pipeline that uses the image caption to guide the removal of
 \noindent
    \begin{figure}[h]
     \centering
-    \includegraphics[width=0.4\textwidth]{midterm_report/assets/oriIMG.jpg}
+    \includegraphics[width=0.3\textwidth]{midterm_report/assets/oriIMG.jpg}
     \caption{\textcolor{blue}{\textbf{Caption:} \emph{``A policeman stops on a street with a search dog.''}}}
     \label{fig:original_image}
 \end{figure}
-\subsection*{Step 1: Extraction of Nouns/Noun Phrases}
+\subsubsection*{Step 1: Extraction of Nouns/Noun Phrases}
 
-\textbf{Method:} 
-\begin{itemize}
-  \item We use SpaCy's small English language model to extract nouns and noun phrases from the caption. For compound phrases such as ``search dog,'' the entire phrase is treated as a single unit.
-\end{itemize}
+\textbf{Method:} We use SpaCy's small English language model to extract nouns and noun phrases from the caption. For compound phrases such as ``search dog,'' the entire phrase is treated as a single unit.
 
 \noindent
 \textbf{Example:}
@@ -160,12 +153,10 @@ We have completed a pipeline that uses the image caption to guide the removal of
 \end{itemize}
 
 
-\subsection*{Step 2: Classification into Object Categories}
+\subsubsection*{Step 2: Classification into Object Categories}
 
-\textbf{Method:}
-\begin{itemize}
-  \item The extracted noun phrases are mapped to one of the 80 object classes used by YOLOv8. Mapping is achieved using a pre-trained Word2Vec model.
-\end{itemize}
+\textbf{Method:}The extracted noun phrases are mapped to one of the 80 object classes used by YOLOv8. Mapping is achieved using a pre-trained Word2Vec model.
+
 
 \noindent
 \textbf{Example:}
@@ -176,28 +167,28 @@ We have completed a pipeline that uses the image caption to guide the removal of
 \end{itemize}}
 
 \noindent
-Since ``street'' does not have a direct correspondence in the 80 classes, mapping it to ``bicycle'' is somewhat reasonable. Ambiguous mappings (like ``street'') are discarded later if they do not appear in the detection step. When dealing with phrases like ``search dog,'' we ensure that word phrases are considered based on the weight of each word.
+Ambiguous mappings (like ``street'') are discarded later if they do not appear in the detection step. When dealing with phrases like ``search dog,'' we ensure that word phrases are considered based on the weight of each word.
 
 
-\subsection*{Step 3: Object Detection and Mask Generation}
 
-\textbf{Method:}
-\begin{itemize}
-  \item YOLOv8 is applied to the image to detect each of the classified objects. If an object is not detected, it is discarded from the pipeline. For each detected object, a binary mask is generated: white for the object and black for the background.
-\end{itemize}
+\subsubsection*{Step 3: Object Detection and Mask Generation}
+
+\noindent
+\textbf{Method:} \\
+YOLOv8 is applied to the image to detect each of the classified objects. If an object is not detected, it is discarded from the pipeline. For each detected object, a binary mask is generated—white for the object and black for the background.
 
 \noindent
 \textbf{Example:}
 \begin{figure}[h]
     \centering
-    \begin{subfigure}[b]{0.4\textwidth}
+    \begin{subfigure}[b]{0.2\textwidth}
         \centering
         \includegraphics[width=\textwidth]{midterm_report/assets/dogMask.jpg}
         \caption{\textcolor{blue}{\textbf{Mask for Dog}}}
         \label{fig:mask_dog}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.4\textwidth}
+    \begin{subfigure}[b]{0.2\textwidth}
         \centering
         \includegraphics[width=\textwidth]{midterm_report/assets/PersonMask.jpg}
         \caption{\textcolor{blue}{\textbf{Mask for Person}}}
@@ -207,51 +198,55 @@ Since ``street'' does not have a direct correspondence in the 80 classes, mappin
     \label{fig:mask_comparison}
 \end{figure}
 
+\subsubsection*{Step 4: Object Removal via Inpainting}
 
-\subsection*{Step 4: Object Removal via Inpainting}
+\noindent
+\textbf{Method:} \\
+We use a Stable Diffusion inpainting model to remove each detected object using its corresponding binary mask. This process is guided by a prompt such as: \emph{``Only blend the highlighted block seamlessly into the background.''}
 
-\textbf{Method:}
-\begin{itemize}
-  \item We uses a Stable Diffusion inpainting model removes each detected object using its corresponding binary mask. This process is guided by a prompt such as: \emph{``Only blend the highlighted block seamlessly into the background.''}
-\end{itemize}
-
+\noindent
 \textbf{Example:}
 \begin{figure}[h]
     \centering
-    \begin{subfigure}[b]{0.3\textwidth}
+    \begin{subfigure}[b]{0.2\textwidth}
         \centering
         \includegraphics[width=\textwidth]{midterm_report/assets/output_dog.png}
-        \label{fig:mask_dog}
+        \caption{Inpainted Output (Dog Removed)}
+        \label{fig:inpaint_dog}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.3\textwidth}
+    \begin{subfigure}[b]{0.2\textwidth}
         \centering
         \includegraphics[width=\textwidth]{midterm_report/assets/output_person (1).png}
-        \label{fig:mask_person}
+        \caption{Inpainted Output (Person Removed)}
+        \label{fig:inpaint_person}
     \end{subfigure}
-    \caption{Binary masks for detected objects. The bicycle was discarded.}
-    \label{fig:mask_comparison}
+    \caption{Inpainting results after object removal. The bicycle was discarded.}
+    \label{fig:inpaint_comparison}
 \end{figure}
 
 \noindent
-\textbf{Future Work:}
-\begin{itemize}
-  \item To remove multiple objects in one mask, this is expected to be a straightforward extension of the current approach.
-
-\end{itemize}
+\textbf{Future Work:} \\
+Removing multiple objects in a single mask is a straightforward extension of this approach.
 
 \noindent
 \textbf{Challenges:}
-\begin{itemize}
-    \item Initial attempts using large language models (e.g., GPT, LLaMA) for key noun extraction were unsatisfactory. We decided to extract \emph{all} nouns instead. Future work may include random selection.
-    \item BERT-based approaches, even with entire-caption context, did not yield accurate classifications.
-    \item Early tests using rectangular bounding boxes led to imprecise masks. We adopted more precise detection methods to obtain smoother, more accurate masks.
-\end{itemize}
+\begin{enumerate}
+    \item \textbf{Key Noun Extraction:} Initial attempts using large language models (e.g., GPT, LLaMA) were unsatisfactory. We opted to extract \emph{all} nouns instead. Future work may explore random selection.
+    \item \textbf{Classification Difficulties:} BERT-based methods (even with the entire-caption context) did not yield accurate classifications.
+    \item \textbf{Bounding Box Precision:} Early tests using rectangular bounding boxes led to imprecise masks. More precise detection methods now provide smoother, more accurate masks.
+\end{enumerate}
+
+
 
 \section{Conclusion}
 In this work, we developed a caption-guided object removal pipeline that leverages YOLOv8-based object detection, stable diffusion inpainting, and large language models to extract key objects from image-caption pairs, classify them into predefined categories, and generate precise masks for targeted object removal. By modifying images, while preserving structural relevance, we created hard negative images that misalign with their original captions, enhancing contrastive learning in CLIP-based models and improving their ability to distinguish fine-grained differences between text and images. Additionally, the altered images were incorporated into the training dataset as false samples to find tune the existing model. While our approach demonstrates the feasibility, future work should focus on refining object classification, supporting multi-object handling, and scaling data generation to improve DeClip’s effectiveness in multimodal learning.
 
-
+\section{Future Plan}
+\begin{itemize}
+    \item We will need to automate the procedure for relatively large dataset (e.g. 3 million images), requiring the balance between efficiency and quality of inpainting, otherwise we might introduce noisy generated images. So we may need to tweak the tech stack and architecture slightly after practice.
+    \item We will further optimize the structure: if a class of examples are already well-learned, then we do not need to improve the accuracy of shotting concerning images. We will not generate $2N$ new examples for all existing examples, but reselect a subset of all images in a dataset for computation cost.
+\end{itemize}
 
 \section{Contributors and Roles}
 \begin{itemize}
@@ -264,7 +259,7 @@ In this work, we developed a caption-guided object removal pipeline that leverag
     \begin{itemize}
         \item Authored the \emph{Related Work} section of the report.
         \item Researched state-of-the-art methods and reviewed the literatures for the group.
-        \item Implemented the \emph{noun extraction} code.
+        \item Implemented the \emph{noun extraction} and \emph{compound word emerging} code.
     \end{itemize}
     \item \textbf{Qiulin Fan} 
     \begin{itemize}
