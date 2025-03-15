@@ -1,16 +1,39 @@
 \documentclass[11pt,letterpaper]{article}
+\usepackage{tikz}
+\usepackage{comment}
+\usepackage{xcolor}
 \bibliographystyle{ieeetr}
 \usepackage[backend=biber,style=numeric]{biblatex} 
 \addbibresource{reference.bib} 
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
-
+\usepackage{float}  
 \usepackage{fullpage}
+\usepackage{subcaption}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Define code style
+\lstdefinestyle{pythonstyle}{
+    backgroundcolor=\color{gray!10},   % Background color
+    commentstyle=\color{green},        % Comment style
+    keywordstyle=\color{blue},         % Keyword style
+    numberstyle=\tiny\color{gray},     % Line numbers style
+    stringstyle=\color{orange},        % String style
+    basicstyle=\ttfamily\footnotesize, % Basic font style
+    breaklines=true,                   % Line breaking
+    frame=single,                      % Frame around the code
+    numbers=left,                      % Line numbers on the left
+    captionpos=b,                      % Caption at the bottom
+    showstringspaces=false             % Hide spaces in strings
+}
+
+\lstset{style=pythonstyle}
 
 \begin{document}
 
 
-\title{DecClip: Removing key components }
+\title{DeClip: Removing key components }
 
 
 \author{
@@ -27,35 +50,404 @@ Lingyu Meng (jmly@umich.edu)\\
 
 
 \section{Introduction}
-Multimodal representation learning, particularly through frameworks like Contrastive Language–Image Pretraining (CLIP), has shown significant promise in bridging the gap between textual and visual data. CLIP-based models excel in tasks such as zero-shot classification, cross-modal retrieval, and transfer learning by learning joint embeddings of text and images. \\However, the performance of these models is highly dependent on the quality, diversity, and scale of the training data. Current multimodal datasets often suffer from issues such as biases, noise, imbalances, and limited diversity, which can hinder the generalization and robustness of CLIP-based systems. While much attention has been given to improving model architectures and training strategies, there is a critical need to explore data-centric methods—such as dataset curation, augmentation, debiasing, and sampling—to address these challenges. This research focuses on developing and evaluating data-centric approaches to enhance the effectiveness of CLIP-based multimodal representation learning, ultimately enabling more reliable and scalable models for real-world applications.\\
-We aim to design data-centric augmentations to improve CLIP performance on small training datasets. Our current interest lies in adpting and improving the Knowledge-CLIP framework\cite{pan2022contrastivelanguageimagepretrainingknowledge} to small-sized datasets, and further create our own model based on it.
+Multimodal representation learning, mainly through frameworks like Contrastive Language–Image Pretraining (CLIP), has shown significant promise in bridging the gap between textual and visual data. CLIP-based models excel in tasks such as zero-shot classification, cross-modal retrieval, and transfer learning by learning joint embeddings of text and images. However, the performance of these models is heavily reliant on the quality, diversity, and scale of the training data. Current multimodal datasets often lack localized, fine-grained features and positional details in captions, which can hinder the generalization and robustness of CLIP-based systems. While much attention has been given to improving model architectures and training strategies, there is a critical need to explore data-centric methods—such as dataset curation, augmentation, debiasing, and sampling—to address these challenges. To address these challenges, we propose DeClip, a data-centric approach that enhances CLIP’s effectiveness by extracting key information from each (image, caption) pair and modifying corresponding components in the image to create hard negatives that characterize the structure of the example, thereby improving model robustness and discrimination.
+
 
 
 \section{Proposed method}
-Contrastive Language–Image Pretraining (CLIP) has revolutionized multimodal representation learning by enabling models to learn joint embeddings of text and images through contrastive learning. While CLIP has shown remarkable performance in zero-shot and transfer learning tasks, its effectiveness is highly dependent on the quality, diversity, and scale of the training data. Existing multimodal datasets often contain biases, noise, and imbalances, which can hinder the generalization and robustness of CLIP-based models. Despite significant progress in model architectures and pretraining strategies, the role of data-centric methods—such as dataset curation, augmentation, debiasing, and sampling—remains underexplored. Addressing these data-related challenges is critical to unlocking the full potential of CLIP-based multimodal representation learning.
+Our idea invoke the manifold hypothesis. Prior work has shown that the embedding space of CLIP is characterized as double-ellipsoids
 
 
 
-\section{Related work} 
 
+\begin{comment}
+  \begin{center}
+    \includegraphics[width=1\textwidth]{midterm_report/pipeline.png} 
+\end{center}
+\end{comment}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{midterm_report/assets/pipeline.png}
+    \caption{Overall approach}
+\end{figure}
+
+
+
+
+
+
+\section{Related work}
+\subsection{Existing Methods:}
+CLIP (Contrastive Language-Image Pre-Training) is a multimodal representation learning model which leanrs to understand both text and image jointly by combining them in a shared embedding space. And its performance is shown recently that it could be enhanced by leverging the difficulty in training.\\
+Currently the exisiting methods mostly improve in the following perspectives.\\
+\begin{itemize}
+    \item \textbf{Hard Negative Mining}: Hard negative examples are those that are semantically similar to the positive samples but belong to different classes, making it challenging for the model to distinguish between them. In contrastive learning, two primary strategies enhance model performance: generation-based methods and regularization-based methods. Generation-based methods, such as NegCLIP and SVLC, create hard negatives by altering positive samples to produce semantically similar yet incorrect pairs, challenging models to discern subtle differences. Regularization-based methods employ strategies like intra-modal contrastive loss and ranking cross-modal hard negatives to refine learning.
+    \item \textbf{Fine-Grained Cross-Modal Alignment Fine-Tuning}: Some previous works such as FILIP enhances multimodal alignment by matching local image patches with specific text tokens via a similarity matrix. Unlike CLIP’s global image-text matching, it computes token-level contrastive losses, forcing visual and textual tokens to mutually select their most relevant counterparts. The regional information and details could be better learned this way.
+    \item \textbf{Rewrite Empowered by Large Language Model}: LaCLIP generates diverse text rewrites for each image caption via LLMs while preserving semantic meaning, boosting the performances significantly on datsets such as  CC12M and LAION-400M . 
+\end{itemize}
+\subsection{Comparisons:}
+DeCLIP combines the idea of \textbf{Hard Negative Mining} and \textbf{Fine-Grained Cross-Modal Alignment Fine-Tuning} such that the model can deepen its understanding of the entire image by paying attention to the regional changes of the image. From the proposed method section, DeCLIP uses Large language model to capture keywords from the caption in the data set and replaces those keywords one at a time with pre-trained catogeries, forming our final traning set. It is different from \textbf{Hard Negative Mining} in applying the changes to \textbf{images} instead of \textbf{texts}, while it is improved based on \textbf{Fine-Grained Cross-Modal Alignment Fine-Tuning} by considering contexts of texts and layout of images
+\subsection{Core Model and Tool References:}
+Our framework integrates multiple state-of-the-art tools for multimodal tasks. The core part is CLIP itself combining text and image processing.
+For \textbf{text extractions}, we utilize the \texttt{spaCy} library with its small English language model (\texttt{en\_core\_web\_sm}), which takes out nouns effecitvely and merge compound noun if needed. 
+Mapping from extracted nouns to pre trained catogories is captured using the \texttt{word2vec-google-news-300} embeddings, a 300-dimensional model trained on 3 billion words from Google News. 
+For \textbf{images segmentation}, we deploy \texttt{yolov8n-seg.pt}, a lightweight variant of YOLOv8-seg pretrained on COCO, and optimize inference via ONNX export. Smoothing images is enhanced by integrating \texttt{CLIP} through the \texttt{runwayml/stable-diffusion-inpainting} pipeline, enabling robust image-text understanding in tasks like inpainting.
 
 
 
 \section{Preliminary}
 
 
+\section*{Pipeline for Caption-Guided Object Removal in Images}
+
+We have completed a pipeline that uses the image caption to guide the removal of specific objects. Currently, our system operates on a single image--caption pair. The code is provided in the Appendix B .
+
+\subsection*{Example}
+\noindent
+   \begin{figure}[h]
+    \centering
+    \includegraphics[width=0.4\textwidth]{midterm_report/assets/oriIMG.jpg}
+    \caption{\textcolor{blue}{\textbf{Caption:} \emph{``A policeman stops on a street with a search dog.''}}}
+    \label{fig:original_image}
+\end{figure}
+\subsection*{Step 1: Extraction of Nouns/Noun Phrases}
+
+\textbf{Method:} 
+\begin{itemize}
+  \item We use SpaCy's small English language model to extract nouns and noun phrases from the caption. For compound phrases such as ``search dog,'' the entire phrase is treated as a single unit.
+\end{itemize}
+
+\noindent
+\textbf{Example:}
+\begin{itemize}
+  \item \textcolor{blue}{ Extracted Terms: ``policeman'', ``street'', ``search dog''}
+\end{itemize}
+
+
+\subsection*{Step 2: Classification into Object Categories}
+
+\textbf{Method:}
+\begin{itemize}
+  \item The extracted noun phrases are mapped to one of the 80 object classes used by YOLOv8. Mapping is achieved using a pre-trained Word2Vec model.
+\end{itemize}
+
+\noindent
+\textbf{Example:}
+\textcolor{blue}{\begin{itemize}
+  \item \texttt{policeman} $\to$ \texttt{person |}
+  \texttt{street} $\to$ \texttt{bicycle |}
+  \texttt{search dog} $\to$ \texttt{dog}
+\end{itemize}}
+
+\noindent
+Since ``street'' does not have a direct correspondence in the 80 classes, mapping it to ``bicycle'' is somewhat reasonable. Ambiguous mappings (like ``street'') are discarded later if they do not appear in the detection step. When dealing with phrases like ``search dog,'' we ensure that word phrases are considered based on the weight of each word.
+
+
+\subsection*{Step 3: Object Detection and Mask Generation}
+
+\textbf{Method:}
+\begin{itemize}
+  \item YOLOv8 is applied to the image to detect each of the classified objects. If an object is not detected, it is discarded from the pipeline. For each detected object, a binary mask is generated: white for the object and black for the background.
+\end{itemize}
+
+\noindent
+\textbf{Example:}
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}[b]{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{midterm_report/assets/dogMask.jpg}
+        \caption{\textcolor{blue}{\textbf{Mask for Dog}}}
+        \label{fig:mask_dog}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{midterm_report/assets/PersonMask.jpg}
+        \caption{\textcolor{blue}{\textbf{Mask for Person}}}
+        \label{fig:mask_person}
+    \end{subfigure}
+    \caption{Binary masks for detected objects. The bicycle was discarded.}
+    \label{fig:mask_comparison}
+\end{figure}
+
+
+\subsection*{Step 4: Object Removal via Inpainting}
+
+\textbf{Method:}
+\begin{itemize}
+  \item We uses a Stable Diffusion inpainting model removes each detected object using its corresponding binary mask. This process is guided by a prompt such as: \emph{``Only blend the highlighted block seamlessly into the background.''}
+\end{itemize}
+
+\textbf{Example:}
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{midterm_report/assets/output_dog.png}
+        \label{fig:mask_dog}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{midterm_report/assets/output_person (1).png}
+        \label{fig:mask_person}
+    \end{subfigure}
+    \caption{Binary masks for detected objects. The bicycle was discarded.}
+    \label{fig:mask_comparison}
+\end{figure}
+
+\noindent
+\textbf{Future Work:}
+\begin{itemize}
+  \item To remove multiple objects in one mask, this is expected to be a straightforward extension of the current approach.
+
+\end{itemize}
+
+\noindent
+\textbf{Challenges:}
+\begin{itemize}
+    \item Initial attempts using large language models (e.g., GPT, LLaMA) for key noun extraction were unsatisfactory. We decided to extract \emph{all} nouns instead. Future work may include random selection.
+    \item BERT-based approaches, even with entire-caption context, did not yield accurate classifications.
+    \item Early tests using rectangular bounding boxes led to imprecise masks. We adopted more precise detection methods to obtain smoother, more accurate masks.
+\end{itemize}
+
+\section{Conclusion}
+In this work, we developed a caption-guided object removal pipeline that leverages YOLOv8-based object detection, stable diffusion inpainting, and large language models to extract key objects from image-caption pairs, classify them into predefined categories, and generate precise masks for targeted object removal. By modifying images, while preserving structural relevance, we created hard negatives that misalign with their original captions, enhancing contrastive learning in CLIP-based models and improving their ability to distinguish fine-grained differences between text and images. While our approach demonstrates the feasibility, future work should focus on refining object classification, supporting multi-object handling, and scaling data generation to improve DeClip’s effectiveness in multimodal learning.
+
+
+
+\section{Contributors and Roles}
+\begin{itemize}
+    \item \textbf{Zhanhao Liu} 
+    \begin{itemize}
+        \item Authored the \emph{Preliminary Section} of the report.
+        \item Implemented the \emph{word matching} and \emph{Stable Diffusion} code.
+    \end{itemize}
+    \item \textbf{Huanchen Jia} 
+    \begin{itemize}
+        \item Authored the \emph{Related Work} section of the report.
+        \item Implemented the \emph{noun extraction} code.
+    \end{itemize}
+    \item \textbf{Qiulin Fan} 
+    \begin{itemize}
+        \item Conceived the idea.
+        \item Authored the \emph{Proposed Method} section of the report.
+        \item Implemented the \emph{object detection and mask generation} code.
+    \end{itemize}
+    \item \textbf{Lingyu Meng} 
+    \begin{itemize}
+        \item Researched \emph{datasets and benchmarks} for future work.
+        \item Authored the \emph{Introduction} and \emph{Conclusion} sections of the report.
+    \end{itemize}
+\end{itemize}
+
+\appendix
+\section*{Appendix A: Code}
+\addcontentsline{toc}{section}{Appendix A: Proposed Datasets}
+
+\begin{lstlisting}[language=Python, caption={Code for Noun extraction}, label={lst:mask_processing}]
+import spacy
+from collections import Counter
+nlp = spacy.load("en_core_web_sm")
+def extract_nouns(sentence, top_n=5):
+    doc = nlp(sentence)
+
+    # Merge consecutive nouns into phrases (e.g., "plant species")
+    phrases = []
+    current_phrase = []
+    for token in doc:
+        if token.pos_ in ['NOUN', 'PROPN']:
+            current_phrase.append(token.text)
+        else:
+            if current_phrase:
+                phrases.append(" ".join(current_phrase))
+                current_phrase = []
+    # Process any remaining noun phrase
+    if current_phrase:
+        phrases.append(" ".join(current_phrase))
+
+    # Count phrase frequency
+    counts = Counter(phrases)
+    return [phrase for phrase, _ in counts.most_common(top_n)]
+
+sentence = "A policeman stops on a street with a search dog."
+list_A = extract_nouns(sentence)
+print("Extracted nouns/phrases:", list_A)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={Code for words match}, label={lst:mask_processing}]
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+from gensim.models import KeyedVectors
+
+# Predefined YOLO keywords
+YOLOKeyWords = [
+    "person", "bicycle", "car", 
+    # ...
+    "vase", "scissors", "teddy bear",
+    "hair drier", "toothbrush"
+]
+
+# Load the Word2Vec model (Google News vectors)
+model = api.load("word2vec-google-news-300")
+
+def get_phrase_vector(phrase, model):
+    tokens = phrase.split()  # Basic whitespace split
+    token_vectors = []
+    for token in tokens:
+        try:
+            token_vectors.append(model[token])
+        except KeyError:
+            print(f"Token '{token}' not found in vocabulary; skipping.")
+    if token_vectors:
+        return np.mean(token_vectors, axis=0)
+    else:
+        print("No valid tokens found in the phrase.")
+        return None
+
+def classify_word_by_similarity(phrase, class_words, model, threshold=0.0):
+    phrase_vector = get_phrase_vector(phrase, model)
+    if phrase_vector is None:
+        return None
+
+    class_vectors = []
+    valid_class_words = []
+    for w in class_words:
+        try:
+            vec = model[w]
+            class_vectors.append(vec)
+            valid_class_words.append(w)
+        except KeyError:
+            continue
+    
+    if not class_vectors:
+        return None
+
+    class_vectors = np.array(class_vectors)
+    similarities = cosine_similarity(phrase_vector.reshape(1, -1), class_vectors).flatten()
+    best_index = np.argmax(similarities)
+    best_similarity = similarities[best_index]
+
+    if best_similarity < threshold:
+        return None
+    return valid_class_words[best_index], best_similarity
+
+# Example usage
+# word = "policeman"
+# result = classify_word_by_similarity(word, YOLOKeyWords, model, threshold=0.3)
+# print("Nearest-Neighbor Class:", result)
+
+# Classify a list of words
+keywords = []
+print(list_A)
+for word in list_A:
+    result = classify_word_by_similarity(word, YOLOKeyWords, model, threshold=0.3)
+    if result:
+        keywords.append(result[0])
+
+print(keywords)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={Code for Object detection and mask generation}, label={lst:mask_processing}]
+# @title YOLO
+from ultralytics import YOLO
+import cv2
+import numpy as np
+import os
+
+# Load YOLO model
+model = YOLO("yolov8n-seg.pt")
+
+# Detect and segment objects in the input image
+results = model(input_image_path)
+img = cv2.imread(input_image_path)
+height, width = img.shape[:2]
+
+# Initialize dictionary to store combined masks for each keyword
+combined_masks = {k: np.zeros((height, width), dtype=np.uint8) for k in keywords}
+label_detected = []
+
+# Iterate over detection results and extract segmentation masks
+for result in results:
+    if result.masks is not None:
+        for i in range(len(result.boxes)):
+            class_id = int(result.boxes.cls[i])
+            label = model.names[class_id]
+            if label in keywords:
+                label_detected.append(label)
+                
+                # Extract mask and binarize
+                mask = result.masks.data[i].cpu().numpy()
+                mask = (mask > 0.2).astype(np.uint8) * 255
+                
+                # Resize if necessary
+                if mask.shape[0] != height or mask.shape[1] != width:
+                    mask = cv2.resize(mask, (width, height), interpolation=cv2.INTER_NEAREST)
+                
+                # Combine masks for the same label
+                combined_masks[label] = cv2.bitwise_or(combined_masks[label], mask)
+
+# Save each mask to the specified folder
+maskFolder = "maskFolder"
+os.makedirs(maskFolder, exist_ok=True)
+
+for label, mask in combined_masks.items():
+    mask_path = f"mask_{label}.png"
+    output_image_path = os.path.join(maskFolder, mask_path)
+    cv2.imwrite(output_image_path, mask)
+    print(f"Saved mask for '{label}' as {output_image_path}")
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={Code for Noun extraction}, label={lst:mask_processing}]
+# @title Stable Diffusion
+from diffusers import StableDiffusionInpaintPipeline
+import torch
+from PIL import Image
+import os
+
+# Load the inpainting model
+model_id = "runwayml/stable-diffusion-inpainting"
+pipe = StableDiffusionInpaintPipeline.from_pretrained(
+    model_id, torch_dtype=torch.float16
+)
+
+# Set device
+device = "cuda" if torch.cuda.is_available() else "cpu"
+pipe = pipe.to(device)
+
+# Load input image
+input_image_path = "image.png"  # Replace with your actual image path
+image = Image.open(input_image_path).convert("RGB")
+
+# Ensure the output directory exists
+outputfolder = "OutputFolder"
+os.makedirs(outputfolder, exist_ok=True)
+
+# Process each detected label
+for label in label_detected:
+    # Load corresponding mask
+    mask_path = os.path.join(maskFolder, f"mask_{label}.png")
+    mask = Image.open(mask_path).convert("RGB")
+    
+    # Define output path
+    output_image_path = os.path.join(outputfolder, f"output_{label}.png")
+    
+    # Perform inpainting
+    result = pipe(prompt=prompt, image=image, mask_image=mask).images[0]
+    
+    # Save the result
+    result.save(output_image_path)
+    print(f"Saved inpainted image for '{label}' as {output_image_path}")
+\end{lstlisting}
 
 
 
 
 
-
-
-
-
-
-\section{Proposed Approach}
-
+\section{Contribution of each team member}
+ddddd
 
 
 
