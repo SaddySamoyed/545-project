@@ -145,6 +145,24 @@ We aim to improve CLIP's perception of the relationship between composition and 
 
 # Algorithm
 
+Prior research suggests that, 对于每一对 correct (image, caption) example, 如果改写它的 caption, 如调整语序和更改成分, 可以把这个 caption 改成一个很相似但是错误的 hard negative. 而我们的 idea 有相似与扩展之处:  我们假想, 对于每一对 correct (image, caption) example, 如果把 image 中的某个关键成分去掉, 并保留剩余部分, 那么这张新产生的 image 和原先的 image 有较高的相似度, 但是却不符合 caption 的描述; 而对于去除关键词后的 caption, 和新产生的 image 则是正确的配对.
+
+对于去除关键成分后产生的新 image, 我们称其为 dual image; 对于去除关键词产生的新 caption, 我们则称之为 dual text. 
+
+具体的做法是: 我们选取一个较小的 hyperparameter $N$ (e.g. $N=3$), 利用  in-context learning capability of large language models, 提取出这个文字中的 $N$ 个 key components (if possible), 并将它们归类于 a few pretrained classes. 紧接着, 我们通过 RCNN 模型 (e.g. YOLO v8) 进行 image segmentation, 在图片上提取 $N$ 个关键成分, 生成 mask, 再通过 diffusion model 的 image inpainting 能力把这些关键成分从图上去掉, 生成 $N$ 张 dual images. 额外地, 我们可以通过 LLM 对原 caption 进行改写, 分别把每个关键词从文字中去除, 相对应地得到 $N$ 个 dual texts.
+
+我们的 idea 的合理性可以建立在  manifold hypothesis 上, 
+
+
+
+
+
+
+
+
+
+
+
 Data-centric methods to improve CLIP-based multimodal representation learning
 
 A way to mine hard negatives:
@@ -184,7 +202,13 @@ And we can use llm to automatically rewrite the sentences, making this sentence 
 
 
 
+Prior research suggests that, 对于每一对 correct (image, caption) example, 如果改写它的 caption, 如调整语序和更改成分, 可以把这个 caption 改成一个很相似但是错误的 hard negative. 而我们的 idea 有相似与扩展之处:  我们假想, 对于每一对 correct (image, caption) example, 如果把 image 中的某个关键成分去掉, 并保留剩余部分, 那么这张新产生的 image 和原先的 image 有较高的相似度, 但是却不符合 caption 的描述; 而对于去除关键词后的 caption, 和新产生的 image 则是正确的配对.
 
+对于去除关键成分后产生的新 image, 我们称其为 dual image; 对于去除关键词产生的新 caption, 我们则称之为 dual text. 
+
+具体的做法是: 我们选取一个较小的 hyperparameter $N$ (e.g. $N=3$), 利用  in-context learning capability of large language models, 提取出这个文字中的 $N$ 个 key components (if possible), 并将它们归类于 a few pretrained classes. 紧接着, 我们通过 RCNN 模型 (e.g. YOLO v8) 进行 image segmentation, 在图片上提取 $N$ 个关键成分, 生成 mask, 再通过 diffusion model 的 image inpainting 能力把这些关键成分从图上去掉, 生成 $N$ 张 dual images. 额外地, 我们可以通过 LLM 对原 caption 进行改写, 分别把每个关键词从文字中去除, 相对应地得到 $N$ 个 dual texts.
+
+我们的 idea 的合理性可以建立在  manifold hypothesis 上, 
 
 
 
