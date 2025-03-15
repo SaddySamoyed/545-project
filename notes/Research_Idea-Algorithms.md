@@ -26,6 +26,16 @@ In this project, students are encouraged to explore or design new data-centric m
 
 
 
+现在, 我们
+
+
+
+
+
+We aim to improve CLIP's perception of the relationship between composition and text. 
+
+
+
 
 
 # GPT prompt
