@@ -38,6 +38,15 @@ Contrastive Language–Image Pretraining (CLIP) has revolutionized multimodal re
 
 
 \section{Related work} 
+CLIP (Contrastive Language-Image Pre-Training) is a multimodal representation learning model which leanrs to understand both text and image jointly by combining them in a shared embedding space. And its performance is shown recently that it could be enhanced by leverging the difficulty in training.\\
+Currently the exisiting methods mostly improve in the following perspectives.\\
+\begin{itemize}
+    \item \textbf{Hard Negative Mining}: Hard negative examples are those that are semantically similar to the positive samples but belong to different classes, making it challenging for the model to distinguish between them. In contrastive learning, two primary strategies enhance model performance: generation-based methods and regularization-based methods. Generation-based methods, such as NegCLIP and SVLC, create hard negatives by altering positive samples to produce semantically similar yet incorrect pairs, challenging models to discern subtle differences. Regularization-based methods employ strategies like intra-modal contrastive loss and ranking cross-modal hard negatives to refine learning. These approaches adjust the training process to emphasize harder negatives, improving the model's discriminative capabilities.
+    \item \textbf{Fine-Grained Cross-Modal Alignment Fine-Tuning}: Some previous works such as FILIP enhances multimodal alignment by matching local image patches with specific text tokens via a similarity matrix. Unlike CLIP’s global image-text matching, it computes token-level contrastive losses, forcing visual and textual tokens to mutually select their most relevant counterparts. The regional
+    \item \textbf{Rewritw Empowered by Large Language Model}: Generate synthetic image-text pairs using diffusion models (e.g., Stable Diffusion) or text-to-image generators.
+\end{itemize}
+
+
 CLIP (Contrastive Language-Image Pre-Training) as a neural network trained on diverse image-text pairs, can predict relevant text for a given image using natural language instructions, showcasing zero-shot capabilities similar to GPT models. 
 Notably, CLIP matches ResNet50's performance on ImageNet in a zero-shot setting without using labeled examples, highlighting its ability to generalize across tasks without task-specific training. 
 In particular, there are recent studies that show that there is a positive correlation between CLIP performance and training objective difficulty. 

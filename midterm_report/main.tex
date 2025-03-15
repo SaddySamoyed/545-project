@@ -10,26 +10,25 @@
 \begin{document}
 
 
-\title{Knowledge-CLIP for Limited Data: Enhancing Semantic Alignment in Small-Scale Datasets}
+\title{DecClip: Removing key components }
 
 
 \author{
-Zhanhao Liu (zhanhaol@umich.edu), 
+Zhanhao Liu (zhanhaol@umich.edu), \\
 Huanchen Jia (jhuanch@umich.edu),\\
-Qiulin Fan (rynnefan@umich.edu),
-Lingyu Meng (jmly@umich.edu)
+Qiulin Fan (rynnefan@umich.edu),\\
+Lingyu Meng (jmly@umich.edu)\\
 }
 
-\date{02/03/2025}
+\date{03/14/2025}
 
 
 \maketitle
 
 
 \section{Introduction}
-Multimodal representation learning, particularly through frameworks like Contrastive Language–Image Pretraining (CLIP), has shown significant promise in bridging the gap between textual and visual data. CLIP-based models excel in tasks such as zero-shot classification, cross-modal retrieval, and transfer learning by learning joint embeddings of text and images. However, the performance of these models is heavily reliant on the quality, diversity, and scale of the training data. Current multimodal datasets often suffer from issues such as biases, noise, imbalances, and limited diversity, which can hinder the generalization and robustness of CLIP-based systems. While much attention has been given to improving model architectures and training strategies, there is a critical need to explore data-centric methods—such as dataset curation, augmentation, debiasing, and sampling—to address these challenges. This research focuses on developing and evaluating data-centric approaches to enhance the effectiveness of CLIP-based multimodal representation learning, ultimately enabling more reliable and scalable models for real-world applications.\\
+Multimodal representation learning, particularly through frameworks like Contrastive Language–Image Pretraining (CLIP), has shown significant promise in bridging the gap between textual and visual data. CLIP-based models excel in tasks such as zero-shot classification, cross-modal retrieval, and transfer learning by learning joint embeddings of text and images. \\However, the performance of these models is highly dependent on the quality, diversity, and scale of the training data. Current multimodal datasets often suffer from issues such as biases, noise, imbalances, and limited diversity, which can hinder the generalization and robustness of CLIP-based systems. While much attention has been given to improving model architectures and training strategies, there is a critical need to explore data-centric methods—such as dataset curation, augmentation, debiasing, and sampling—to address these challenges. This research focuses on developing and evaluating data-centric approaches to enhance the effectiveness of CLIP-based multimodal representation learning, ultimately enabling more reliable and scalable models for real-world applications.\\
 We aim to design data-centric augmentations to improve CLIP performance on small training datasets. Our current interest lies in adpting and improving the Knowledge-CLIP framework\cite{pan2022contrastivelanguageimagepretrainingknowledge} to small-sized datasets, and further create our own model based on it.
-
 
 
 \section{Proposed method}
