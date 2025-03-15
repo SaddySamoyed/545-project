@@ -121,7 +121,7 @@ Currently the exisiting methods mostly improve in the following perspectives.\\
 \subsection{Comparisons:}
 DeCLIP combines the idea of \textbf{Hard Negative Mining} and \textbf{Fine-Grained Cross-Modal Alignment Fine-Tuning} such that the model can deepen its understanding of the entire image by paying attention to the regional changes of the image. From the proposed method section, DeCLIP uses Large language model to capture keywords from the caption in the data set and replaces those keywords one at a time with pre-trained catogeries, forming our final traning set. It is different from \textbf{Hard Negative Mining} in applying the changes to \textbf{images} instead of \textbf{texts}, while it is improved based on \textbf{Fine-Grained Cross-Modal Alignment Fine-Tuning} by considering contexts of texts and layout of images
 \subsection{Core Model and Tool References:}
-Our framework integrates state-of-the-art multimodal tools. For text extraction, \texttt{spaCy} \cite{spacy2025} identifies and merges compound nouns. We then map these nouns to pre-trained categories via \texttt{word2vec-google-news-300} embeddings. For image segmentation, \texttt{yolov8n-seg.pt} (a lightweight YOLOv8 variant pretrained on COCO) is used.\\ Inpainting leverages \texttt{runwayml/stable-diffusion-inpainting} and \texttt{CLIP}, ensuring robust image–text understanding.
+Our framework integrates state-of-the-art multimodal tools. For text extraction, \texttt{spaCy} \cite{spacy2025}(SPACY · Industrial-strength Natural Language Processing in Python, n.d.) identifies and merges compound nouns. We then map these nouns to pre-trained categories via \texttt{word2vec-google-news-300} \cite{word2vec2025} (Google Code Archive - Long-term Storage for Google Code Project Hosting., n.d.) embeddings. For image segmentation, \texttt{yolov8n-seg.pt} (a lightweight YOLOv8 variant pretrained on COCO) is used.\\ Inpainting leverages \texttt{runwayml/stable-diffusion-inpainting} and \texttt{CLIP}, ensuring robust image–text understanding.
 
 
 
@@ -179,7 +179,14 @@ YOLOv8 is applied to the image to detect each of the classified objects. If an o
 
 \noindent
 \textbf{Example:}
+
 \begin{figure}[h]
+    \centering
+    \includegraphics[width=0.4\textwidth]{midterm_report/assets/after_mask.png}
+    \caption{\textcolor{blue}{\textbf{Caption:} \emph{``A policeman stops on a street with a search dog.''}}}
+    \label{fig:original_image}
+\end{figure}
+
     \centering
     \begin{subfigure}[b]{0.2\textwidth}
         \centering
