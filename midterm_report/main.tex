@@ -2,9 +2,8 @@
 \usepackage{tikz}
 \usepackage{comment}
 \usepackage{xcolor}
-\bibliographystyle{ieeetr}
-\usepackage[backend=biber,style=numeric]{biblatex} 
-\addbibresource{reference.bib} 
+\usepackage[backend=biber, style=ieee]{biblatex} 
+\addbibresource{midterm_report/assets/refs.bib}
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
 \usepackage{float}  
@@ -12,6 +11,9 @@
 \usepackage{subcaption}
 \usepackage{listings}
 \usepackage{xcolor}
+\usepackage{wrapfig}
+
+
 
 % Define code style
 \lstdefinestyle{pythonstyle}{
@@ -48,14 +50,54 @@ Lingyu Meng (jmly@umich.edu)\\
 
 \maketitle
 
+\section{Abstract}
+Multimodal representation learning, mainly through frameworks like Contrastive Language–Image Pretraining (CLIP), has shown significant promise in bridging the gap between textual and visual data. CLIP-based models excel in tasks such as zero-shot classification, cross-modal retrieval, and transfer learning by learning joint embeddings of text and images. However, the performance of these models is heavily reliant on the quality, diversity, and scale of the training data. Current multimodal datasets often lack localized, fine-grained features and positional details in captions, which can hinder the generalization and robustness of CLIP-based systems. While much attention has been given to improving model architectures and training strategies, there is a critical need to explore data-centric methods—such as dataset curation, augmentation, debiasing, and sampling—to address these challenges. 
 
 \section{Introduction}
-Multimodal representation learning, mainly through frameworks like Contrastive Language–Image Pretraining (CLIP), has shown significant promise in bridging the gap between textual and visual data. CLIP-based models excel in tasks such as zero-shot classification, cross-modal retrieval, and transfer learning by learning joint embeddings of text and images. However, the performance of these models is heavily reliant on the quality, diversity, and scale of the training data. Current multimodal datasets often lack localized, fine-grained features and positional details in captions, which can hinder the generalization and robustness of CLIP-based systems. While much attention has been given to improving model architectures and training strategies, there is a critical need to explore data-centric methods—such as dataset curation, augmentation, debiasing, and sampling—to address these challenges. To address these challenges, we propose DeClip, a data-centric approach that enhances CLIP’s effectiveness by extracting key information from each (image, caption) pair and modifying corresponding components in the image to create hard negatives that characterize the structure of the example, thereby improving model robustness and discrimination.
+Recent studies show that CLIP, trained on full images, struggles to learn localized features—small but critical details—due to its reliance on global image-text alignment, limiting its effectiveness in fine-grained visual-text tasks such as detailed object classification and caption-based retrieval. While hard negative mining has proven beneficial in contrastive learning, most existing approaches emphasize textual modifications, neglecting image-based hard negatives, which are essential for refining CLIP’s ability to capture subtle visual differences. To address this, we propose DeClip, a data-centric approach that extracts key information from image-caption pairs, modifies corresponding image components, and generates hard negatives to improve model robustness and discrimination. In safety-critical domains like medical imaging and robotics, these localized details are crucial for accurate identification and precise action. Minute visual differences can determine healthy vs. diseased tissue, and missing them may lead to misdiagnoses. In robotics, particularly surgical applications, identifying exact boundaries or precise tool-tip positions is vital, as errors could have life-threatening consequences. Many downstream tasks also require an understanding of not just what an object is but where it is and how it is oriented, such as a robotic gripper pinpointing an item’s edges for a secure grasp. We propose that DeClip’s training methodology can enable models to learn localized features while effectively capturing positional and orientation cues, though rigorous testing is needed to validate and refine this capability.
+
+
+
+% While CLIP effectively aligns high-level semantics, its dependence on global cues can obscure fine-grained details crucial in safety-critical domains like medical imaging, robotics, and autonomous systems, where minute differences—such as distinguishing healthy from diseased tissue or detecting precise object orientations for robotic grasping—can have significant consequences. By training models with DeClip, we aim to enable them to learn localized features and capture positional and orientation cues, though further validation is required to refine and assess this capability.
 
 
 
 \section{Proposed method}
-Our idea invoke the manifold hypothesis. Prior work has shown that the embedding space of CLIP is characterized as double-ellipsoids
+Prior research suggests that, for each pair of correct (image, caption) examples, if its caption is rewritten, e.g., by reordering and changing its constituents, it can be changed into a very similar but erroneous hard negative. Our idea has similarities and extensions. idea has both similarities and extensions: we hypothesize that for each pair of correct (image, caption) examples, if we remove a key component from the image and keep the rest, then the resulting image has a high degree of similarity to the original image, but does not fit the caption; and for the caption after removing the keyword, and the caption after removing the keyword, we can change the caption to a very similar but wrong hard negative. For the caption after removing the keywords, the new image is correctly matched with the original image.
+
+For the new image after removing the keyword, we call it \textbf{dual image}; for the new caption after removing the keyword, we call it \textbf{dual text}. 
+
+To do this, we take a small hyperparameter $N$ (e.g., $N=3$), utilize the in-context learning capability of large language models, extract $N$ key components (if possible), and categorize them into different key components. If possible), and categorize them into a few pretrained classes. Immediately after that, we perform image segmentation using RCNN models (e.g., YOLO v8) to extract $N$ key components from the image, generate masks, and then use the image inpainting capability of the diffusion model to transform these key components into masks, which can be used for image segmentation in the image. In addition, we can rewrite the original caption by LLM to remove each keyword from the text, and get $N$ dual texts accordingly.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{midterm_report/assets/pipeline2.png}
+    \caption{Overall approach}
+\end{figure}
+
+
+
+
+
+The rationality of our idea can be based on the manifold hypothesis. 
+
+Our idea invokes the manifold hypothesis. 
+We aimed at improving CLIP's perception of the relationship between composition and text. 
+
+
+
+
+Prior research 
+We aimed at 
+Prior work has shown that the embedding manifold of CLIP is characterized as double-ellipsoids\cite{levi2024doubleellipsoidgeometryclip} (Levi, Gilboa, 2024), and we 
+
+For each sample image, we suppose that the 
+\begin{figure}{r}{\textwidth} % r: 图片在右侧
+    \centering
+    \includegraphics[width=0.7\textwidth]{midterm_report/assets/manifold.png}
+    \caption{Embedding data manifold in Clip Space}
+\end{figure}
+Our idea invoke the manifold hypothesis. Prior work has shown that the embedding space of CLIP is characterized as double-ellipsoids\cite{levi2024doubleellipsoidgeometryclip} (Levi, Gilboa, 2024), and we 
 
 
 
@@ -65,13 +107,6 @@ Our idea invoke the manifold hypothesis. Prior work has shown that the embedding
     \includegraphics[width=1\textwidth]{midterm_report/pipeline.png} 
 \end{center}
 \end{comment}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.9\textwidth]{midterm_report/assets/pipeline.png}
-    \caption{Overall approach}
-\end{figure}
-
 
 
 
@@ -101,7 +136,7 @@ For \textbf{images segmentation}, we deploy \texttt{yolov8n-seg.pt}, a lightweig
 
 \section*{Pipeline for Caption-Guided Object Removal in Images}
 
-We have completed a pipeline that uses the image caption to guide the removal of specific objects. Currently, our system operates on a single image--caption pair. The code is provided in the Appendix B .
+We have completed a pipeline that uses the image caption to guide the removal of specific objects. Currently, our system operates on a single image--caption pair. The code is provided in the Appendix A.
 
 \subsection*{Example}
 \noindent
@@ -214,7 +249,7 @@ Since ``street'' does not have a direct correspondence in the 80 classes, mappin
 \end{itemize}
 
 \section{Conclusion}
-In this work, we developed a caption-guided object removal pipeline that leverages YOLOv8-based object detection, stable diffusion inpainting, and large language models to extract key objects from image-caption pairs, classify them into predefined categories, and generate precise masks for targeted object removal. By modifying images, while preserving structural relevance, we created hard negatives that misalign with their original captions, enhancing contrastive learning in CLIP-based models and improving their ability to distinguish fine-grained differences between text and images. While our approach demonstrates the feasibility, future work should focus on refining object classification, supporting multi-object handling, and scaling data generation to improve DeClip’s effectiveness in multimodal learning.
+In this work, we developed a caption-guided object removal pipeline that leverages YOLOv8-based object detection, stable diffusion inpainting, and large language models to extract key objects from image-caption pairs, classify them into predefined categories, and generate precise masks for targeted object removal. By modifying images, while preserving structural relevance, we created hard negative images that misalign with their original captions, enhancing contrastive learning in CLIP-based models and improving their ability to distinguish fine-grained differences between text and images. Additionally, the altered images were incorporated into the training dataset as false samples to find tune the existing model. While our approach demonstrates the feasibility, future work should focus on refining object classification, supporting multi-object handling, and scaling data generation to improve DeClip’s effectiveness in multimodal learning.
 
 
 
@@ -228,6 +263,7 @@ In this work, we developed a caption-guided object removal pipeline that leverag
     \item \textbf{Huanchen Jia} 
     \begin{itemize}
         \item Authored the \emph{Related Work} section of the report.
+        \item Researched state-of-the-art methods and reviewed the literatures for the group.
         \item Implemented the \emph{noun extraction} code.
     \end{itemize}
     \item \textbf{Qiulin Fan} 
@@ -242,6 +278,9 @@ In this work, we developed a caption-guided object removal pipeline that leverag
         \item Authored the \emph{Introduction} and \emph{Conclusion} sections of the report.
     \end{itemize}
 \end{itemize}
+
+\printbibliography
+
 
 \appendix
 \section*{Appendix A: Code}
@@ -441,29 +480,4 @@ for label in label_detected:
     result.save(output_image_path)
     print(f"Saved inpainted image for '{label}' as {output_image_path}")
 \end{lstlisting}
-
-
-
-
-
-\section{Contribution of each team member}
-ddddd
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\printbibliography
 \end{document}
