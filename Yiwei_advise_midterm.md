@@ -43,8 +43,32 @@ Diffusion，2~4 FPS （多张 15 FPS, 4 张 e.g)
 
 总结：
 
-1. 买 API，不多，1-5 刀就可以。并且不需要一个图片&文字用一个 token. 可以做 batch inference.
-2. 30000 张不用计算资源，colab 就可以（yiwei 也推荐说 colab 挺不错的
-3. diffusion 结束后可以做 quality check
-4. ddd
-5. 
+1. Yawed: 试一试这个 prompt. 我们先给出 80 个词, 然后给出 caption batch (e.g. 20 个) 作为一个 prompt, 提取每个 caption 中是否有名词属于这些词汇
+2. 买 API，不多，1-5 刀就可以。并且不需要一个图片&文字用一个 token. 可以做 batch inference. （可以研究一下 batch inference 这件事）
+3. 30000 张不用计算资源，colab 就可以（yiwei 也推荐说 colab 挺不错的
+4. diffusion 结束后可以做 quality check
+5. ddd
+
+
+
+
+
+所以我们现在需要做：
+
+1. 尝试新的 caption 提取名词方案，成功则可以更改 pipeline，可以写一下这个 section into 论文
+2. 研究一下 batch inference（读论文），确认 gpt 一个 token 做我们的 batch inference，能够做出准确推断的最大 batch
+3. 研究一下 quality check （读论文）看看 diffusion 生成质量能够筛选
+4. 研究一下 clip loss function，尝试本地部署 fine-tuned clip
+
+
+
+
+
+fql: 4
+
+lzh: 3
+
+jst: 2
+
+Jhc: 1
+
