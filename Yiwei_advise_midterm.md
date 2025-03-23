@@ -46,4 +46,5 @@ Diffusion，2~4 FPS （多张 15 FPS, 4 张 e.g)
 1. 买 API，不多，1-5 刀就可以。并且不需要一个图片&文字用一个 token. 可以做 batch inference.
 2. 30000 张不用计算资源，colab 就可以（yiwei 也推荐说 colab 挺不错的
 3. diffusion 结束后可以做 quality check
-4. 
+4. ddd
+5. 
