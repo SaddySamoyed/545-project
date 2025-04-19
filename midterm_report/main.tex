@@ -35,7 +35,7 @@
 \begin{document}
 
 
-\title{DeClip: Removing key components }
+\title{DeClip: Hard Negative Mining through Image Decomposition and Inpainting}
 
 
 \author{
@@ -51,7 +51,7 @@ Lingyu Meng (jmly@umich.edu)\\
 \maketitle
 
 \section{Abstract}
-Contrastive Language–Image Pretraining excels in multimodal learning, enabling zero-shot classification, cross-modal retrieval, and transfer learning. However, its reliance on global image-text alignment limits its ability to capture localized features, weakening performance in fine-grained visual tasks. To address this, DeClip introduces image-based hard negatives by modifying key image-caption pairs, enhancing model robustness and discrimination. This improves CLIP’s ability to distinguish fine-grained details, strengthening its effectiveness in contrastive learning and multimodal tasks.
+Contrastive Language–Image Pretraining(CLIP) excels in multimodal learning, enabling zero-shot classification, cross-modal retrieval, and transfer learning. However, its reliance on global image-text alignment limits its ability to capture localized features, weakening performance in fine-grained visual tasks. To address this, DeClip introduces image-based hard negatives by modifying key image-caption pairs, enhancing model robustness and discrimination. This improves CLIP’s ability to distinguish fine-grained details, strengthening its effectiveness in contrastive learning and multimodal tasks.
 
 \section{Introduction}
 CLIP\cite{radford2021learningtransferablevisualmodels} (Radford et al., 2021), trained on full images, struggles to learn localized features due to its reliance on global image-text alignment, limiting its effectiveness in fine-grained visual-text tasks like object classification and caption-based retrieval. This limitation hinders its ability to capture subtle visual differences, which is especially problematic in safety-critical domains such as medical imaging and robotics, where precise distinctions—like identifying diseased tissue or ensuring accurate tool positioning—are crucial. Solving this problem would improve CLIP’s ability to learn localized visual details, enhancing its adaptability to tasks requiring fine-grained reasoning and ultimately making it more effective in real-world multimodal applications.
@@ -121,7 +121,7 @@ Currently the exisiting methods mostly improve in the following perspectives.\\
 \subsection{Comparisons:}
 DeCLIP combines the idea of \textbf{Hard Negative Mining} and \textbf{Fine-Grained Cross-Modal Alignment Fine-Tuning} such that the model can deepen its understanding of the entire image by paying attention to the regional changes of the image. From the proposed method section, DeCLIP uses Large language model to capture keywords from the caption in the data set and replaces those keywords one at a time with pre-trained catogeries, forming our final traning set. It is different from \textbf{Hard Negative Mining} in applying the changes to \textbf{images} instead of \textbf{texts}, while it is improved based on \textbf{Fine-Grained Cross-Modal Alignment Fine-Tuning} by considering contexts of texts and layout of images
 \subsection{Core Model and Tool References:}
-Our framework integrates state-of-the-art multimodal tools. For text extraction, \texttt{spaCy} \cite{spacy2025}(SPACY · Industrial-strength Natural Language Processing in Python, n.d.) identifies and merges compound nouns. We then map these nouns to pre-trained categories via \texttt{word2vec-google-news-300} \cite{word2vec2025} (Google Code Archive - Long-term Storage for Google Code Project Hosting., n.d.) embeddings. For image segmentation, \texttt{yolov8n-seg.pt} (a lightweight YOLOv8 variant pretrained on COCO) is used.\\ Inpainting leverages \texttt{runwayml/stable-diffusion-inpainting} and \texttt{CLIP}, ensuring robust image–text understanding.
+Our framework integrates state-of-the-art multimodal tools. For text extraction, \texttt{spaCy} \cite{spacy2025}(SPACY · Industrial-strength Natural Language Processing in Python, n.d.) identifies and merges compound nouns. We then map these nouns to pre-trained categories via \texttt{word2vec-google-news-300} \cite{word2vec2025} (Google Code Archive - Long-term Storage for Google Code Project Hosting., n.d.) embeddings. For image segmentation, \texttt{yolov8n-seg.pt} \cite{ultralytics2023segment} (Ultralytics, 2025)(a lightweight YOLOv8 variant pretrained on COCO) is used.\\ Inpainting leverages \texttt{runwayml/stable-diffusion-inpainting} \cite{stabilityai2023inpainting}(Stable-diffusion-v1-5/Stable-diffusion-inpainting · Hugging Face, n.d.) and \texttt{CLIP}, ensuring robust image–text understanding.
 
 
 
@@ -144,7 +144,7 @@ We have completed a pipeline that uses the image caption to guide the removal of
 \end{figure}
 \subsubsection*{Step 1: Extraction of Nouns/Noun Phrases}
 
-\textbf{Method:} We use SpaCy's small English language model to extract nouns and noun phrases from the caption. For compound phrases such as ``search dog,'' the entire phrase is treated as a single unit.
+\textbf{Method:} We use SpaCy\cite{spacy2025} (SPACY · Industrial-strength Natural Language Processing in Python, n.d.)'s small English language model to extract nouns and noun phrases from the caption. For compound phrases such as ``search dog,'' the entire phrase is treated as a single unit.
 
 \noindent
 \textbf{Example:}
@@ -155,7 +155,7 @@ We have completed a pipeline that uses the image caption to guide the removal of
 
 \subsubsection*{Step 2: Classification into Object Categories}
 
-\textbf{Method:}The extracted noun phrases are mapped to one of the 80 object classes used by YOLOv8. Mapping is achieved using a pre-trained Word2Vec model.
+\textbf{Method:}The extracted noun phrases are mapped to one of the 80 object classes used by YOLOv8\cite{ultralytics2023segment} (Ultralytics, 2025). Mapping is achieved using a pre-trained Word2Vec model.
 
 
 \noindent
@@ -175,61 +175,34 @@ Ambiguous mappings (like ``street'') are discarded later if they do not appear i
 
 \noindent
 \textbf{Method:} \\
-YOLOv8 is applied to the image to detect each of the classified objects. If an object is not detected, it is discarded from the pipeline. For each detected object, a binary mask is generated—white for the object and black for the background.
+YOLOv8 \cite{ultralytics2023segment} (Ultralytics, 2025) is applied to the image to detect each of the classified objects. If an object is not detected, it is discarded from the pipeline. For each detected object, a binary mask is generated—white for the object and black for the background.
 
 \noindent
 \textbf{Example:}
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.4\textwidth]{midterm_report/assets/after_mask.png}
-    \caption{\textcolor{blue}{\textbf{Caption:} \emph{``A policeman stops on a street with a search dog.''}}}
+    \includegraphics[width=0.4\textwidth]{midterm_report/assets/mask_along.png}
+    \caption{\textcolor{blue}{Dog-mask Person-mask}}
     \label{fig:original_image}
 \end{figure}
 
-    \centering
-    \begin{subfigure}[b]{0.2\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{midterm_report/assets/dogMask.jpg}
-        \caption{\textcolor{blue}{\textbf{Mask for Dog}}}
-        \label{fig:mask_dog}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.2\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{midterm_report/assets/PersonMask.jpg}
-        \caption{\textcolor{blue}{\textbf{Mask for Person}}}
-        \label{fig:mask_person}
-    \end{subfigure}
-    \caption{Binary masks for detected objects. The bicycle was discarded.}
-    \label{fig:mask_comparison}
-\end{figure}
+  
 
 \subsubsection*{Step 4: Object Removal via Inpainting}
 
 \noindent
 \textbf{Method:} \\
-We use a Stable Diffusion inpainting model to remove each detected object using its corresponding binary mask. This process is guided by a prompt such as: \emph{``Only blend the highlighted block seamlessly into the background.''}
+We use a Stable Diffusion\cite{stabilityai2023inpainting}(Stable-diffusion-v1-5/Stable-diffusion-inpainting · Hugging Face, n.d.) inpainting model to remove each detected object using its corresponding binary mask. This process is guided by a prompt such as: \emph{``Only blend the highlighted block seamlessly into the background.''}
 
 \noindent
 \textbf{Example:}
+
 \begin{figure}[h]
     \centering
-    \begin{subfigure}[b]{0.2\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{midterm_report/assets/output_dog.png}
-        \caption{Inpainted Output (Dog Removed)}
-        \label{fig:inpaint_dog}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.2\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{midterm_report/assets/output_person (1).png}
-        \caption{Inpainted Output (Person Removed)}
-        \label{fig:inpaint_person}
-    \end{subfigure}
-    \caption{Inpainting results after object removal. The bicycle was discarded.}
-    \label{fig:inpaint_comparison}
+    \includegraphics[width=0.5\textwidth]{midterm_report/assets/after_mask.png}
+    \caption{\textcolor{blue}{Inpainted Output (Dog Removed)(Person Removed)}}
+    \label{fig:original_image}
 \end{figure}
 
 \noindent
