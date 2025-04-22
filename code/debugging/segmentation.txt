@@ -81,3 +81,108 @@ for label, mask in combined_masks.items():
  非常好! 现在我需要你做一件额外的事情:
  如果这个 mask 是全黑的 (即 yolo 并没有检测到, 那么就删除这个 mask 的 图片, 并且, 同时删除 caption_data 中对应的 key-value map)
  比如: 对于 image 1, 对应的 caption_data 是 {'tables': 'dining table', 'chairs': 'chair'}, 如果我们检测到的 'chair' 的 mask 是全黑的(或者像素非常少), 那么我们就删除这一条 'chairs': 'chair' 这个 pair 从而 caption_data 的这一条变为 {'tables': 'dining table'}
+
+
+
+
+
+ def enlarge_mask_by_pixels(mask, pixels=20):
+    kernel_size = pixels * 2 + 1  # ensures dilation covers 20 pixels in all directions
+    kernel = np.ones((kernel_size, kernel_size), np.uint8)
+    dilated = cv2.dilate(mask, kernel, iterations=1)
+    return dilated
+
+updated_caption_data = []
+# Loop through each image-caption pair and caption keyword dict
+for i, (img_path, img_id, caption, caption_id) in enumerate(image_caption_pairs):
+    keyword_class_map = caption_data[i]  # e.g., {'man': 'person', 'cake': 'cake'}
+    target_classes = set(keyword_class_map.values())
+
+    # Load image
+    img = cv2.imread(img_path)
+
+    height, width = img.shape[:2]
+    results = model(img_path)
+
+    # Initialize masks
+    combined_masks = {label: np.zeros((height, width), dtype=np.uint8) for label in target_classes}
+
+
+    for result in results:
+        for j in range(len(result.boxes)):
+            class_id = int(result.boxes.cls[j])
+            label = model.names[class_id]
+            if label in target_classes:
+                mask = result.masks.data[j].cpu().numpy()
+                mask = (mask > 0.2).astype(np.uint8) * 255
+                if mask.shape != (height, width):
+                    mask = cv2.resize(mask, (width, height), interpolation=cv2.INTER_NEAREST)
+                    enlarged_mask = enlarge_mask_by_pixels(mask, pixels=20)
+                    combined_masks[label] = cv2.bitwise_or(combined_masks[label], enlarged_mask)
+
+    # Save masks for each detected class
+    updated_mapping = {}
+    for label, mask in combined_masks.items():
+        if np.any(mask):  # Only save non-zero masks
+            mask_path = os.path.join(maskFolder, f"{img_id}-{label}.jpg")
+            cv2.imwrite(mask_path, mask)
+            updated_mapping[label] = label  # Dummy reverse map
+            print(f"[{i}] Saved non-zero mask for '{label}' → {mask_path}")
+        else:
+            print(f"[{i}] Skipped '{label}' — mask is all black.")
+
+    updated_caption_data.append(updated_mapping)
+
+这段 yolo 代码有点问题.
+
+caption_data 长这个样子:
+[
+{'tables': 'dining table', 'chairs': 'chair'},
+{'man': 'person', 'desserts': 'cake'},
+{'telephone booth': 'bench', 'man': 'person'},
+{'kitchen': 'potted plant'},
+{'child': 'person', 'woman': 'person', 'kitchen': 'potted plant'},
+{'man': 'person'},
+{'clock': 'clock', 'table': 'dining table'},
+{'bus': 'bus', 'people': 'person'},
+{'bicycle': 'bicycle'},
+{'people': 'person', 'food truck': 'truck'},
+{'person': 'person'},
+{'person': 'person', 'fork': 'fork', 'knife': 'knife'},
+{'table': 'dining table'},
+{'kitchen': 'potted plant', 'cabinets': 'potted plant', 'dishwasher': 'microwave', 'sink': 'sink', 'refrigerator': 'refrigerator'},
+{'chef': 'person'},
+{'adults': 'person', 'laptop computers': 'laptop'},
+{'men': 'person', 'table': 'dining table', 'food': 'banana'},
+{'man': 'person', 'vegetables': 'broccoli'},
+{'chefs': 'person', 'patrons': 'person'},
+{'table': 'dining table', 'flowers': 'vase'},
+]
+
+而我们处理后, updated_caption_data 长这个样子.
+[
+{},
+{'cake': 'cake', 'person': 'person'},
+{},
+{},
+{},
+{'person': 'person'},
+{},
+{'bus': 'bus', 'person': 'person'},
+{'bicycle': 'bicycle'},
+{'person': 'person'},
+{},
+{'person': 'person'},
+{'dining table': 'dining table'},
+{},
+{'person': 'person'},
+{'person': 'person', 'laptop': 'laptop'},
+{'person': 'person', 'dining table': 'dining table'},
+{},
+{},
+{'vase': 'vase', 'dining table': 'dining table'},
+]
+
+
+问题出在: 我们错把 label 作为 key 了.
+请问你如何修改
