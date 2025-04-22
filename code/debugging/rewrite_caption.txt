@@ -1,0 +1,23 @@
+Given a caption and a keyword component, rewrite the sentence into a new one by removing the keyword component together with all its related language.
+
+There are three example:
+	Caption: "A policeman stops on the street with a search dog." 
+	keyword:"policeman", 
+	Processed caption: "A search dog stops on the street."
+
+	Caption: "A black and white dog is running in a grassy garden surrounded by a white fence."
+	keyword: "dog"
+	Processed caption: "There is a grassy garden surrounded by a white fence."
+
+	Caption: "An officer in a reflective vest stands at the front of his van with his dog."
+	keyword: "officer"
+	Processed caption: "There is a dog stands at the front of a van."
+
+Now you are given:
+1. Caption: "Five people walking with a multicolored sky in the background."
+   keyoword: "people"
+2. Caption: "A caucasian man wearing a short-sleeved black shirt and a dark-skinned woman wearing a sleeveless dress are working at a conveyor."
+   keyword: "man"
+3. Caption: "Two men in florescent vests are standing next to parked cars in front of a small building while one of them converses with a driver and a woman on a bike is seen riding by"
+   keyword: "cars"
+   
