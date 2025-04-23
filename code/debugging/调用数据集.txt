@@ -1,0 +1,60 @@
+好的, 现在各个模块我都做好了。至少, 对于单张 image 和单个 caption 没问题了. 现在我将进行 batch 操作, 首先要做的就是从 coco dataset 中提取图片和 caption!
+我已经下载了: 
+```
+!wget http://images.cocodataset.org/zips/train2014.zip
+!unzip train2014.zip
+!wget http://images.cocodataset.org/annotations/annotations_trainval2014.zip
+!unzip annotations_trainval2014.zip
+from pycocotools.coco import COCO
+ann_path = 'annotations/captions_train2014.json'
+coco = COCO(ann_path)
+with open('annotations/captions_train2014.json', 'r') as f:
+    # 先加载完整 JSON 数据（COCO 是字典）
+    data = json.load(f)
+```
+
+
+我们知道,
+其中每张图片的格式类似于: "train2014/COCO_train2014_000000057870.jpg"
+where 57870 is the image id.
+
+
+
+其中 data["images"] 是一个 list, 每个 entry 是一个 dict
+{
+  "license": 5,
+  "file_name": "COCO_train2014_000000057870.jpg",
+  "coco_url": "http://images.cocodataset.org/train2014/COCO_train2014_000000057870.jpg",
+  "height": 480,
+  "width": 640,
+  "date_captured": "2013-11-14 16:28:13",
+  "flickr_url": "http://farm4.staticflickr.com/3153/2970773875_164f0c0b83_z.jpg",
+  "id": 57870
+}
+data["annotations"] 也是一个 list, 每个 entry 是一个 dict:
+{
+	"image_id": 476220,
+    "id": 314,
+    "caption": "An empty kitchen with white and black appliances."
+}
+
+
+现在我想: 把 data["images"] 的第 i 项对应的 image, 其 path 存放在一个
+
+current_image_path = ""
+并把这个 image 的 id 存在:
+current_image_id =  
+
+并取其所有 captions 中的第一个, 存放在
+current_caption = ""
+并把这个 caption 的 id 存在
+
+
+
+
+
+具体而言: 
+image_entry
+我们把 data["images"][i] 的 'file_name' 前面加上 train2014/, 放在 current_image_filename
+同理, for 
+
